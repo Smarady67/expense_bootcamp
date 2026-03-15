@@ -1,9 +1,25 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
+import { handleSignIn } from '@/src/lib/actions/auth';
 
 export default function SignInPage() {
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(formData: FormData) {
+    setLoading(true);
+    setError(null);
+
+    const result = await handleSignIn(formData);
+    
+    if (result?.error) {
+      setError(result.error);
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row font-sans">
       
@@ -33,25 +49,46 @@ export default function SignInPage() {
             <p className="text-[#8B95B3] text-sm font-semibold">Sign in to your account to continue</p>
           </div>
 
-          <form className="space-y-5">
+          <form action={handleSubmit} className="space-y-5">
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/50 p-3 rounded-lg text-center">
+                <p className="text-red-400 text-xs font-bold uppercase tracking-widest">{error}</p>
+              </div>
+            )}
+
             <div className="flex flex-col gap-2">
               <label className="text-sm font-bold text-white">Email</label>
-              <input type="email" className="w-full bg-white rounded-lg p-4 text-slate-900 outline-none placeholder:text-slate-400" placeholder="Enter your email" />
+              <input 
+                name="email"
+                type="email" 
+                required
+                className="w-full bg-white rounded-lg p-4 text-slate-900 outline-none placeholder:text-slate-400 focus:ring-2 ring-teal-400/50" 
+                placeholder="Enter your email" 
+              />
             </div>
 
             <div className="flex flex-col gap-2">
               <div className="flex justify-between">
                 <label className="text-sm font-bold text-white">Password</label>
               </div>
-              <input type="password" className="w-full bg-white rounded-lg p-4 text-slate-900 outline-none placeholder:text-slate-400" placeholder="••••••••" />
+              <input 
+                name="password"
+                type="password" 
+                required
+                className="w-full bg-white rounded-lg p-4 text-slate-900 outline-none placeholder:text-slate-400 focus:ring-2 ring-teal-400/50" 
+                placeholder="••••••••" 
+              />
               <Link href="forgot" className="text-xs text-white opacity-70 hover:underline">Forgot password?</Link>
             </div>
 
-            <Link href="/dashboard" className="block w-full">
-                  <button type="button" className="w-full bg-white text-[#313B56] py-4 rounded-lg font-bold text-lg mt-6 shadow-sm hover:bg-slate-100 transition-colors uppercase tracking-widest">
-                    Sign In
-                  </button>                 
-            </Link>
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="w-full bg-white text-[#313B56] py-4 rounded-lg font-bold text-lg mt-6 shadow-sm hover:bg-slate-100 transition-colors uppercase tracking-widest disabled:opacity-50"
+            >
+              {loading ? "Signing In..." : "Sign In"}
+            </button>
 
             <div className="text-center mt-6">
               <p className="text-white text-sm opacity-90">

@@ -1,9 +1,27 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
+import { handleForgotPassword } from '@/src/lib/actions/auth';
 
 export default function ForgotPasswordPage() {
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(formData: FormData) {
+    setLoading(true);
+    setError(null);
+
+    const email = formData.get("email") as string;
+    const result = await handleForgotPassword(email);
+    
+    if (result?.error) {
+      setError(result.error);
+      setLoading(false);
+    }
+    // If successful, the server action redirects to /verify automatically
+  }
+
   return (
     <div className="min-h-screen bg-[#12141D] font-sans flex flex-col items-center">
       
@@ -21,10 +39,17 @@ export default function ForgotPasswordPage() {
       <div className="flex-1 flex flex-col justify-center w-full max-w-md px-6">
         <h1 className="text-3xl font-bold text-white text-center mb-10">Forgot Password!</h1>
         
-        <form className="space-y-6">
+        <form action={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/50 p-3 rounded-lg text-center">
+              <p className="text-red-400 text-xs font-bold uppercase tracking-widest">{error}</p>
+            </div>
+          )}
+
           <div className="space-y-2">
             <label className="text-xs font-bold text-white uppercase tracking-wider">Email</label>
             <input 
+              name="email"
               type="email" 
               className="w-full bg-white rounded-lg p-4 text-slate-900 outline-none placeholder:text-slate-400 font-medium" 
               placeholder="Enter your email" 
@@ -32,15 +57,13 @@ export default function ForgotPasswordPage() {
             />
           </div>
 
-          {/* Navigates to the Verify Code Page */}
-          <Link href="/verify" className="block w-full">
-            <button 
-              type="button" 
-              className="w-full bg-white text-[#12141D] py-4 rounded-lg font-bold text-sm mt-4 uppercase tracking-widest hover:bg-slate-200 transition-all shadow-sm"
-            >
-              Confirm
-            </button>
-          </Link>
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full bg-white text-[#12141D] py-4 rounded-lg font-bold text-sm mt-4 uppercase tracking-widest hover:bg-slate-200 transition-all shadow-sm disabled:opacity-50"
+          >
+            {loading ? "Checking Email..." : "Confirm"}
+          </button>
         </form>
       </div>
     </div>

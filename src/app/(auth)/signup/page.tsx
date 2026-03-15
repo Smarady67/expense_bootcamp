@@ -1,14 +1,41 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
+import { handleSignUp } from '@/src/lib/actions/auth';
 
 export default function SignUpPage() {
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(formData: FormData) {
+    setLoading(true);
+    setError(null);
+    
+    // Client-side validation
+    const password = formData.get("password");
+    const confirmPassword = formData.get("confirmPassword");
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+
+    // Call the Backend Action
+    const result = await handleSignUp(formData);
+    
+    if (result?.error) {
+      setError(result.error);
+      setLoading(false);
+    }
+    // Note: If successful, the action redirects automatically to /verify
+  }
+
   return (
-    // Main container with the two-tone split background
     <div className="min-h-screen flex flex-col md:flex-row font-sans">
       
-      {/* LEFT PANEL: Branding (Dark Charcoal #12141D) */}
+      {/* LEFT PANEL: Branding */}
       <div className="md:w-1/2 bg-[#12141D] p-10 md:p-24 flex flex-col justify-start">
         <div className="flex items-center gap-3 mb-32">
           <div className="w-6 h-6 bg-teal-400 rounded-md shadow-[0_0_15px_rgba(45,212,191,0.5)] "></div>
@@ -26,7 +53,7 @@ export default function SignUpPage() {
         </div>
       </div>
 
-      {/* RIGHT PANEL: Form (Slate Blue #313B56) */}
+      {/* RIGHT PANEL: Form */}
       <div className="md:w-1/2 bg-[#313B56] p-10 md:p-24 flex items-center justify-center">
         <div className="w-full max-w-sm">
           <div className="mb-10">
@@ -34,36 +61,65 @@ export default function SignUpPage() {
             <p className="text-[#8B95B3] text-sm font-semibold">Get started with your free account today</p>
           </div>
 
-          <form className="space-y-5">
+          <form action={handleSubmit} className="space-y-5">
+            {/* Error Message Display */}
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/50 p-3 rounded-lg">
+                <p className="text-red-400 text-xs font-bold uppercase tracking-widest text-center">{error}</p>
+              </div>
+            )}
+
             <div className="flex flex-col gap-2">
               <label className="text-sm font-bold text-white">Full Name</label>
-              <input type="text" className="w-full bg-white rounded-lg p-4 text-slate-900 outline-none placeholder:text-slate-400" placeholder="Enter your full name" />
+              <input 
+                name="fullName"
+                type="text" 
+                required
+                className="w-full bg-white rounded-lg p-4 text-slate-900 outline-none placeholder:text-slate-400 focus:ring-2 ring-teal-400/50 transition-all" 
+                placeholder="Enter your full name" 
+              />
             </div>
 
             <div className="flex flex-col gap-2">
               <label className="text-sm font-bold text-white">Email</label>
-              <input type="email" className="w-full bg-white rounded-lg p-4 text-slate-900 outline-none placeholder:text-slate-400" placeholder="Enter your email" />
+              <input 
+                name="email"
+                type="email" 
+                required
+                className="w-full bg-white rounded-lg p-4 text-slate-900 outline-none placeholder:text-slate-400 focus:ring-2 ring-teal-400/50 transition-all" 
+                placeholder="Enter your email" 
+              />
             </div>
 
             <div className="flex flex-col gap-2">
               <label className="text-sm font-bold text-white">Password</label>
-              <input type="password" className="w-full bg-white rounded-lg p-4 text-slate-900 outline-none placeholder:text-slate-400" placeholder="Create a password" />
+              <input 
+                name="password"
+                type="password" 
+                required
+                className="w-full bg-white rounded-lg p-4 text-slate-900 outline-none placeholder:text-slate-400 focus:ring-2 ring-teal-400/50 transition-all" 
+                placeholder="Create a password" 
+              />
             </div>
 
             <div className="flex flex-col gap-2">
               <label className="text-sm font-bold text-white">Confirm Password</label>
-              <input type="password" className="w-full bg-white rounded-lg p-4 text-slate-900 outline-none placeholder:text-slate-400" placeholder="Confirm your password" />
+              <input 
+                name="confirmPassword"
+                type="password" 
+                required
+                className="w-full bg-white rounded-lg p-4 text-slate-900 outline-none placeholder:text-slate-400 focus:ring-2 ring-teal-400/50 transition-all" 
+                placeholder="Confirm your password" 
+              />
             </div>
 
-
-            <Link href="/dashboard" className="block w-full">
-              <button 
-                type="button" 
-                className="w-full bg-white text-[#313B56] py-4 rounded-lg font-bold text-lg mt-6 shadow-sm hover:bg-slate-100 transition-all uppercase tracking-widest"
-              >
-                Sign Up
-              </button>
-            </Link>
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="w-full bg-white text-[#313B56] py-4 rounded-lg font-bold text-lg mt-6 shadow-sm hover:bg-slate-100 transition-all uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? "Creating Account..." : "Sign Up"}
+            </button>
 
             <div className="text-center mt-6">
               <p className="text-white text-sm font-semibold opacity-90">

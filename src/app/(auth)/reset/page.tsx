@@ -1,15 +1,47 @@
 'use client';
 
+import React, { useState } from 'react';
 import Link from 'next/link';
-import React from 'react';
+import { useSearchParams } from 'next/navigation';
+import { handleResetPassword } from '@/src/lib/actions/auth';
 
 export default function NewPasswordPage() {
+  const searchParams = useSearchParams();
+  const email = searchParams.get('email') || '';
+
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(formData: FormData) {
+    setLoading(true);
+    setError(null);
+
+    const password = formData.get("password") as string;
+    const confirmPassword = formData.get("confirmPassword") as string;
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+
+    const result = await handleResetPassword(email, password);
+    
+    if (result?.error) {
+      setError(result.error);
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row font-sans">
       
-      {/* LEFT PANEL: Identity (Dark Charcoal #12141D) */}
+      {/* LEFT PANEL: Identity */}
       <div className="md:w-1/2 bg-[#12141D] p-10 md:p-24 flex flex-col justify-start text-white">
-        <span className="text-2xl font-bold mb-32">Spendly</span>
+        <div className="flex items-center gap-3 mb-32">
+          <div className="w-6 h-6 bg-teal-400 rounded-md shadow-[0_0_15px_rgba(45,212,191,0.5)]"></div>
+          <span className="text-lg text-white font-bold tracking-[0.4em] uppercase">Spendly</span>
+        </div>
         
         <div className="max-w-md">
           <h1 className="text-5xl font-bold leading-tight mb-10">
@@ -22,7 +54,7 @@ export default function NewPasswordPage() {
         </div>
       </div>
 
-      {/* RIGHT PANEL: New Password Input (Slate Blue #313B56) */}
+      {/* RIGHT PANEL: New Password Input */}
       <div className="md:w-1/2 bg-[#313B56] p-10 md:p-24 flex items-center justify-center">
         <div className="w-full max-w-sm">
           <div className="mb-8">
@@ -30,26 +62,41 @@ export default function NewPasswordPage() {
             <p className="text-[#8B95B3] text-sm font-semibold">Create a new, strong password</p>
           </div>
 
-          <form className="space-y-8">
+          <form action={handleSubmit} className="space-y-8">
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/50 p-3 rounded-lg text-center">
+                <p className="text-red-400 text-xs font-bold uppercase tracking-widest">{error}</p>
+              </div>
+            )}
+
             <div className="space-y-2">
               <label className="text-sm font-bold text-white">New Password</label>
               <input 
+                name="password"
                 type="password" 
-                className="w-full bg-white rounded-lg p-4 text-slate-900 outline-none" />
+                required
+                className="w-full bg-white rounded-lg p-4 text-slate-900 outline-none focus:ring-2 ring-teal-400/50 transition-all" 
+                placeholder="••••••••"
+              />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-bold text-white">Confirm New Password</label>
               <input 
+                name="confirmPassword"
                 type="password" 
-                className="w-full bg-white rounded-lg p-4 text-slate-900 outline-none" />
+                required
+                className="w-full bg-white rounded-lg p-4 text-slate-900 outline-none focus:ring-2 ring-teal-400/50 transition-all" 
+                placeholder="••••••••"
+              />
             </div>
             
-          <Link href="/dashboard" className="block w-full">
-            <button type="submit" className="w-full bg-white text-[#313B56] py-3 rounded-lg font-bold text-sm tracking-widest mt-4 uppercase">
-              Update Password
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="w-full bg-white text-[#313B56] py-3 rounded-lg font-bold text-sm tracking-widest mt-4 uppercase hover:bg-slate-200 transition-all shadow-sm disabled:opacity-50"
+            >
+              {loading ? "Updating..." : "Update Password"}
             </button>
-          </Link>
-
           </form>
         </div>
       </div>
