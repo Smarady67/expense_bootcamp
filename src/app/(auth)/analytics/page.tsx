@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import React from 'react';
 import Link from 'next/link';
 import { db } from "@/src/lib/db";
@@ -5,41 +7,34 @@ import { transactions } from "@/src/db/schema";
 import { eq, desc } from "drizzle-orm";
 
 export default async function AnalyticsPage() {
-  // 1. Fetch all expense transactions
   const allExpenses = await db.select()
     .from(transactions)
     .where(eq(transactions.type, 'expense'))
     .orderBy(desc(transactions.date));
 
-  // 2. Group expenses by month in JavaScript (More reliable for SQLite)
   const groupedData: Record<string, number> = {};
   
   allExpenses.forEach((t) => {
     if (!t.date || t.amount === null) return;
     
-    // Force conversion to number to prevent "invisible" bars
     const amount = parseFloat(String(t.amount));
     if (isNaN(amount) || amount <= 0) return;
 
-    // Standardize the date parsing
     const date = new Date(t.date);
-    if (isNaN(date.getTime())) return; // Skip invalid dates
+    if (isNaN(date.getTime())) return; 
 
     const monthKey = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
     
     groupedData[monthKey] = (groupedData[monthKey] || 0) + amount;
   });
 
-  // 3. Prepare Chart Data (Max 12 months)
   const chartData = Object.entries(groupedData)
     .map(([month, total]) => ({ month, total }))
     .slice(0, 12)
     .reverse();
 
-  // Find the highest month to set the scale (prevent division by zero)
   const maxExpense = Math.max(...chartData.map(d => d.total), 0.1);
 
-  // 4. Growth Logic (comparing most recent to previous)
   const currentMonthTotal = chartData[chartData.length - 1]?.total || 0;
   const lastMonthTotal = chartData[chartData.length - 2]?.total || 0;
   
@@ -92,7 +87,6 @@ export default async function AnalyticsPage() {
                 </div>
               ) : (
                 chartData.map((d, i) => {
-                  // Calculate height percentage (at least 5% if value > 0 for visibility)
                   const heightPercentage = Math.max((d.total / maxExpense) * 100, 5);
                   
                   return (

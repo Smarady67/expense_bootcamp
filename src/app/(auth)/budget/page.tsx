@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import React from 'react';
 import Link from 'next/link';
 import { db } from "@/src/lib/db";
@@ -6,13 +8,11 @@ import { eq } from "drizzle-orm";
 import { handleDeleteBudget } from '@/src/lib/actions/transactions';
 
 export default async function BudgetTrackerPage() {
-  // 1. Fetch Budgets and Transactions (Expenses only)
   const userBudgets = await db.select().from(budgetsTable);
   const allTransactions = await db.select()
     .from(transactions)
     .where(eq(transactions.type, 'expense'));
 
-  // 2. Map through budgets and calculate spending for each
   const budgetData = userBudgets.map((b) => {
     const totalSpent = allTransactions
       .filter((t) => t.category === b.category) 
